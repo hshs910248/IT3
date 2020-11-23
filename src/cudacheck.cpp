@@ -1,5 +1,6 @@
 #include <cstdio>
-#include <cuda.h>
+#include <cstdlib>
+#include <cuda_runtime.h>
 
 void __cudaSafeCall(cudaError err, const char *file, const int line) {
     if (cudaSuccess != err) {

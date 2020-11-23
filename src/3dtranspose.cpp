@@ -2,9 +2,12 @@
 #include <cuda_runtime.h>
 #include "2dtranspose.h"
 #include "3dtranspose.h"
-#include "cudacheck.h"
+#include "util.h"
 #include "equations.h"
 #include "row_op.h"
+#include "col_op.h"
+#include "debug.h"
+#include "gcd.h"
 
 namespace inplace {
 
@@ -22,6 +25,7 @@ namespace _3d {
 		init_dims(dim, d1, d2, d3);
 		switch (type) {
 			case 213:
+				_213::transpose(data, d1, d2, d3);
 				return;
 			case 132:
 				return;
@@ -73,6 +77,74 @@ namespace _3d {
 			_2d::transpose(data, dim);
 			_2d::row_gather_op(_321::row_shuffle(d2, d3), data, d2 * d3, d1);
 			//_2d::row_scatter_op(_321::row_scatter_shuffle(d2, d3), data, d2 * d3, d1);
+		}
+	
+	}
+	
+	namespace _213 {
+		template<typename T>
+		void c2r(T* data, int d1, int d2, int d3) {
+			PRINT("Doing C2R transpose\n");
+			
+			int c, t, k;
+			extended_gcd(d2, d1, c, t);
+			if (c > 1) {
+				extended_gcd(d2/c, d1/c, t, k);
+			} else {
+				k = t;
+			}
+
+			int a = d2 / c;
+			int b = d1 / c;
+			if (c > 1) {
+				col_op(_2d::c2r::rotate(d2, b), data, d1, d2, d3);
+			}
+			row_gather_op(_2d::c2r::row_shuffle(d2, d1, c, k), data, d1, d2, d3);
+			col_op(_2d::c2r::col_shuffle(d2, d1, c), data, d1, d2, d3);
+		}
+		
+		template<typename T>
+		void r2c(T* data, int d1, int d2, int d3) {
+			PRINT("Doing R2C transpose\n");
+
+			int c, t, q;
+			extended_gcd(d1, d2, c, t);
+			if (c > 1) {
+				extended_gcd(d1/c, d2/c, t, q);
+			} else {
+				q = t;
+			}
+			
+			int a = d2 / c;
+			int b = d1 / c;
+			
+			int k;
+			extended_gcd(d2, d1, c, t);
+			if (c > 1) {
+				extended_gcd(d2/c, d1/c, t, k);
+			} else {
+				k = t;
+			}
+			
+			col_op(_2d::r2c::col_shuffle(a, c, d2, q), data, d1, d2, d3);
+			row_scatter_op(_2d::r2c::row_scatter_shuffle(d2, d1, c, k), data, d1, d2, d3);
+			if (c > 1) {
+				col_op(_2d::r2c::rotate(d2, b), data, d1, d2, d3);
+			}
+		}
+		
+		template<typename T>
+		void transpose(T* data, int d1, int d2, int d3) {
+			size_t data_size = sizeof(T) * d1 * d2 * d3;
+			prefetch(data, data_size);
+			
+			if (d1 * d2 <= d3) {
+				_2d::row_gather_op(_321::row_shuffle(d1, d2), data, d1 * d2, d3);
+			}
+			else {
+				if (d1 > d2) c2r(data, d1, d2, d3);
+				else r2c(data, d2, d1, d3);
+			}
 		}
 	
 	}

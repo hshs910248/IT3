@@ -5,13 +5,13 @@ LIB_DIR = lib
 OBJSLIB = $(OBJ_DIR)/transpose.o\
 		$(OBJ_DIR)/2dtranspose.o\
 		$(OBJ_DIR)/3dtranspose.o\
-		$(OBJ_DIR)/reduced_math.o\
+		$(OBJ_DIR)/util.o\
+		$(OBJ_DIR)/introspect.o\
+		$(OBJ_DIR)/cudacheck.o\
 		$(OBJ_DIR)/gcd.o\
 		$(OBJ_DIR)/col_op.o\
 		$(OBJ_DIR)/row_op.o\
-		$(OBJ_DIR)/util.o\
-		$(OBJ_DIR)/introspect.o\
-		$(OBJ_DIR)/cudacheck.o
+		$(OBJ_DIR)/reduced_math.o
 OBJTEST = $(OBJ_DIR)/test_inplace.o\
 		$(OBJ_DIR)/tensor_util.o
 		

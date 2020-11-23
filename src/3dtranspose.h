@@ -19,5 +19,10 @@ namespace _3d {
 		template<typename T>
 		void transpose(T* data, int d1, int d2, int d3);
 	}
+	
+	namespace _213 {
+		template<typename T>
+		void transpose(T* data, int d1, int d2, int d3);
+	}
 }
 }

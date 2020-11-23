@@ -16,6 +16,10 @@ size_t shared_mem_per_block() {
     return cached_properties.properties.sharedMemPerBlock;
 }
 
+int max_n_threads_per_sm() {
+	return cached_properties.properties.maxThreadsPerMultiProcessor;
+}
+
 int current_sm() {
     return cached_properties.properties.major * 100 +
         cached_properties.properties.minor;
