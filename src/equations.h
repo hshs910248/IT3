@@ -8,40 +8,36 @@ namespace inplace {
 
 namespace _3d {
 
-namespace _321 {
-	struct row_shuffle {
-		int d2;
-		reduced_divisor d3;
-		__host__
-		row_shuffle(int _d2, int _d3) : d2(_d2), d3(_d3) {}
+namespace _132 {
+	struct row_permute {
+		int d2, d3;
 		
-		int i;
-		__host__ __device__ 
-		void set_i(const int& _i) {
-			i = _i;
-		}
+		__host__
+		row_permute(int _d3, int _d2) : d3(_d3), d2(_d2) {}
 		
 		__host__ __device__
-		int operator()(const int& j) {
-			unsigned int jdivd3, jmodd3;
-			d3.divmod(j, jdivd3, jmodd3);
-			return jdivd3 + jmodd3 * d2;
+		int operator()(const int& ik, const int& j) {
+			int k = ik % d3;
+			int i = ik / d3;
+			return i + k * d2;
 		}
 		
 		#ifdef DEBUG
 			__host__
 			std::string getName() {
-				std::string name("Row Shuffle");
+				std::string name("Row permute");
 				return name;
 			}
 		#endif
 	};
-	
-	struct row_scatter_shuffle {
-		int d3;
+}
+
+namespace _213 {
+	struct row_shuffle {
+		int d1;
 		reduced_divisor d2;
 		__host__
-		row_scatter_shuffle(int _d2, int _d3) : d2(_d2), d3(_d3) {}
+		row_shuffle(int _d1, int _d2) : d1(_d1), d2(_d2) {}
 		
 		int i;
 		__host__ __device__ 
@@ -53,7 +49,7 @@ namespace _321 {
 		int operator()(const int& j) {
 			unsigned int jdivd2, jmodd2;
 			d2.divmod(j, jdivd2, jmodd2);
-			return jdivd2 + jmodd2 * d3;
+			return jdivd2 + jmodd2 * d1;
 		}
 		
 		#ifdef DEBUG
@@ -278,7 +274,7 @@ namespace r2c {
 			return (int)m.mod(i + (int)m.get() - (int)b.div(j));
 		}
 		
-		#ifdef DEBUG
+	#ifdef DEBUG
 		__host__
 		std::string getName() {
 			std::string name("Rotate");

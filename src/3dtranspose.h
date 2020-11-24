@@ -15,12 +15,17 @@ namespace _3d {
 		void transpose(T* data, int d1, int d2, int d3);
 	}
 	
+	namespace _213 {
+		template<typename T>
+		void transpose(T* data, int d1, int d2, int d3);
+	}
+	
 	namespace _321 {
 		template<typename T>
 		void transpose(T* data, int d1, int d2, int d3);
 	}
 	
-	namespace _213 {
+	namespace _132 {
 		template<typename T>
 		void transpose(T* data, int d1, int d2, int d3);
 	}
