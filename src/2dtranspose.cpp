@@ -39,6 +39,7 @@ namespace _2d {
 		template<typename T>
 		void transpose(T* data, int d1, int d2) {
 			PRINT("Doing C2R transpose\n");
+			PRINT("d1' mod 32 = %d\n", d1 % 32);
 			
 			int c, t, k;
 			extended_gcd(d2, d1, c, t);
@@ -62,6 +63,7 @@ namespace _2d {
 		template<typename T>
 		void transpose(T* data, int d1, int d2) {
 			PRINT("Doing R2C transpose\n");
+			//PRINT("d1' mod 32 = %d\n", d1 % 32);
 
 			int c, t, q;
 			extended_gcd(d1, d2, c, t);

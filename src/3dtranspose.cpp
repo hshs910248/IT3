@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cuda_runtime.h>
+#include <algorithm>
 #include "2dtranspose.h"
 #include "3dtranspose.h"
 #include "util.h"
@@ -137,15 +138,6 @@ namespace _3d {
 	
 	}
 	
-	namespace _321 {
-		template<typename T>
-		void transpose(T* data, int d1, int d2, int d3) {
-			_231::transpose(data, d1, d2, d3);
-			_2d::row_gather_op(_213::row_shuffle(d2, d3), data, d2 * d3, d1);
-		}
-	
-	}
-	
 	namespace _132 {
 		template<typename T>
 		void c2r(T* data, int d1, int d2, int d3) {
@@ -203,15 +195,45 @@ namespace _3d {
 			size_t data_size = sizeof(T) * d1 * d2 * d3;
 			prefetch(data, data_size);
 			
-			_2d::col_op(_132::row_permute(d3, d2), data, d1, d2 * d3);
-			/*if (d2 < d1) { // d2d3 < d1d3
+			if (d2 < d1 && d1 >= 32) { // d2d3 < d1d3
 				_2d::col_op(_132::row_permute(d3, d2), data, d1, d2 * d3);
 			}
-			else {
+			else if (d1 > 2) {
 				if (d2 > d3) c2r(data, d1, d3, d2);
 				else r2c(data, d1, d2, d3);
-			}*/
+			}
+			else {
+				if (d2 >= d3) {
+					_312::transpose(data, d1, d2, d3);
+					_2d::row_gather_op(_213::row_shuffle(d3, d1), data, d3 * d1, d2);
+				}
+				else {
+					_2d::row_gather_op(_213::row_shuffle(d1, d2), data, d1 * d2, d3);
+					_231::transpose(data, d2, d1, d3);
+				}
+			}
 		}
+	}
+	
+	namespace _321 {
+		template<typename T>
+		void transpose(T* data, int d1, int d2, int d3) {
+			if (std::max(d1, d2 * d3) <= std::max(d1 * d2, d3)) {
+				_231::transpose(data, d1, d2, d3);
+				_2d::row_gather_op(_213::row_shuffle(d2, d3), data, d2 * d3, d1);
+			}
+			else {
+				if (d1 * d2 > d3) {
+					_132::transpose(data, d1, d2, d3);
+					_231::transpose(data, d1, d3, d2);
+				}
+				else {
+					_213::transpose(data, d1, d2, d3);
+					_312::transpose(data, d2, d1, d3);
+				}
+			}
+		}
+	
 	}
 }
 }

@@ -22,6 +22,9 @@ void transpose(TensorUtil<T>& tu) {
 	tu.init_data(d_data);
 	//if (tu.fp == NULL) tu.print_tensor(d_data);
 	
+	/*int dev = 1;
+	CudaSafeCall( cudaSetDevice(dev) );*/
+	
 	cudaEvent_t start, stop;
 	CudaSafeCall( cudaEventCreate(&start) );
 	CudaSafeCall( cudaEventCreate(&stop) );
@@ -34,7 +37,7 @@ void transpose(TensorUtil<T>& tu) {
 	CudaSafeCall( cudaEventSynchronize(stop) );
 	float t;
 	CudaSafeCall( cudaEventElapsedTime(&t, start, stop) );
-	float throughput = ((double)dataSize * sizeof(T) * 2) / 1e6 / t;
+	float throughput = ((double)dataSize * 2) / 1e6 / t;
 	printf("Execution Time: %.5fms\nEffective Bandwidth: %.5fGB/s\n", t, throughput);
     FILE* txtfp = fopen("inplace_bench.txt", "a+");
     fprintf(txtfp, "%.5f\n", t);
