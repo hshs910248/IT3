@@ -46,8 +46,8 @@ void transpose(TensorUtil<T>& tu) {
     fprintf(txtfp, "%.5f\n", throughput);
     fclose(txtfp);
 
-    if (tu.fp != NULL) tu.write_file(d_data);
-	else tu.print_tensor(d_data);
+    //if (tu.fp != NULL) tu.write_file(d_data);
+	//else tu.print_tensor(d_data);
 	
 	CudaSafeCall( cudaFree(d_data) );
 }
