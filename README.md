@@ -1,1 +1,1 @@
-# IT3 - In-place Transposition CUDA linrary for 3rd-order Tensors
+# IT3 - In-place Transposition CUDA Library for 3rd-order Tensors
