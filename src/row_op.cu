@@ -373,6 +373,7 @@ void smem_row_launch(F fn, K kernel, T* data, int d1, int d2, int d3) {
 	kernel<<<n_blocks, n_threads, smem_size>>>(fn, data, d1, d2, d3);
 }
 
+/*
 template<typename F, typename T>
 __global__ void gmem_multi_row_gather_op(F fn, T* data, T* tmp, int d1, int d2, int d3) {
 	size_t offset = blockIdx.x * d1;
@@ -428,7 +429,7 @@ void gmem_multi_row_launch(F fn, K kernel, T* data, int d1, int d2, int d3) {
 	CudaSafeCall( cudaLaunchCooperativeKernel((void *)kernel,
 										  n_blocks, n_threads, kernelArgs) );
 	CudaSafeCall( cudaFree(tmp) );
-}
+}*/
 
 template<typename F, typename T>
 __global__ void gmem_row_gather_op(F fn, T* data, T* tmp, int d1, int d2, int d3) {
@@ -505,9 +506,9 @@ void row_gather_op(F fn, T* data, int d1, int d2, int d3) {
     else if (sizeof(T) * (size_t)d1 <= smem_lim) {
 		smem_row_launch(fn, smem_row_gather_op<F, T>, data, d1, d2, d3);
     }
-	else if (d1 * 64 / ((double)d1 * d2 * d3) < 0.1) {
+	/*else if (d1 * 64 / ((double)d1 * d2 * d3) < 0.1) {
 		gmem_multi_row_launch(fn, gmem_multi_row_gather_op<F, T>, data, d1, d2, d3);
-	}
+	}*/
 	else {
         gmem_row_launch(fn, gmem_row_gather_op<F, T>, data, d1, d2, d3);
     }
@@ -522,9 +523,9 @@ void row_scatter_op(F fn, T* data, int d1, int d2, int d3) {
     else if (sizeof(T) * (size_t)d1 <= smem_lim) {
 		smem_row_launch(fn, smem_row_scatter_op<F, T>, data, d1, d2, d3);
     }
-	else if (d1 * 64 / ((double)d1 * d2 * d3) < 0.1) {
+	/*else if (d1 * 64 / ((double)d1 * d2 * d3) < 0.1) {
 		gmem_multi_row_launch(fn, gmem_multi_row_scatter_op<F, T>, data, d1, d2, d3);
-	}
+	}*/
 	else {
         gmem_row_launch(fn, gmem_row_scatter_op<F, T>, data, d1, d2, d3);
     }
