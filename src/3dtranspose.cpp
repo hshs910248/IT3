@@ -127,7 +127,8 @@ namespace _3d {
 			size_t data_size = sizeof(T) * d1 * d2 * d3;
 			prefetch(data, data_size);
 			
-			if (d1 * d2 <= d3) {
+			//if (d1 * d2 <= d3) {
+			if (d1 * d2 / ((double)d1 * d2 * d3) < 0.01) {
 				_2d::row_gather_op(_213::row_shuffle(d1, d2), data, d1 * d2, d3);
 			}
 			else {
@@ -195,7 +196,7 @@ namespace _3d {
 			size_t data_size = sizeof(T) * d1 * d2 * d3;
 			prefetch(data, data_size);
 			
-			if (d2 < d1 && d1 >= 64) { // d2d3 < d1d3
+			if (d1 >= 64) {
 				_2d::col_op(_132::row_permute(d3, d2), data, d1, d2 * d3);
 			}
 			else if (d1 > 2) {
@@ -226,6 +227,14 @@ namespace _3d {
 				_213::transpose(data, d1, d2, d3);
 				_312::transpose(data, d2, d1, d3);
 			}
+			// Using 132
+			/*if (std::max(std::max(d1 * d2, d1 * d3), std::max(d1 * d2, d3)) < std::max(d2 * d3, d1)) {
+				_312::transpose(data, d1, d2, d3);
+				_132::transpose(data, d3, d1, d2);
+			}
+			else {
+				_132::transpose(data, d3, d1, d2);
+			}*/
 		}
 	
 	}

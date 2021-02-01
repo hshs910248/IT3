@@ -374,6 +374,63 @@ void smem_row_launch(F fn, K kernel, T* data, int d1, int d2, int d3) {
 }
 
 template<typename F, typename T>
+__global__ void gmem_multi_row_gather_op(F fn, T* data, T* tmp, int d1, int d2, int d3) {
+	size_t offset = blockIdx.x * d1;
+	for (size_t k = 0; k < d3; k++) {
+		size_t kd1d2 = k * d1 * d2;
+		for (size_t i = blockIdx.x; i < d2; i += gridDim.x) {
+			fn.set_i(i);
+			for (size_t j = threadIdx.x; j < d1; j += blockDim.x) {
+				tmp[offset + j] = data[fn(j) + i * d1 + kd1d2];
+			}
+			__syncthreads();
+			for (size_t j = threadIdx.x; j < d1; j += blockDim.x) {
+				data[j + i * d1 + kd1d2] = tmp[offset + j];
+			}
+		}
+	}
+}
+
+template<typename F, typename T>
+__global__ void gmem_multi_row_scatter_op(F fn, T* data, T* tmp, int d1, int d2, int d3) {
+	size_t offset = blockIdx.x * d1;
+	for (size_t k = 0; k < d3; k++) {
+		size_t kd1d2 = k * d1 * d2;
+		for (size_t i = blockIdx.x; i < d2; i += gridDim.x) {
+			fn.set_i(i);
+			for (size_t j = threadIdx.x; j < d1; j += blockDim.x) {
+				tmp[offset + fn(j)] = data[j + i * d1 + kd1d2];
+			}
+			__syncthreads();
+			for (size_t j = threadIdx.x; j < d1; j += blockDim.x) {
+				data[j + i * d1 + kd1d2] = tmp[offset + j];
+			}
+		}
+	}
+}
+
+template<typename F, typename K, typename T>
+void gmem_multi_row_launch(F fn, K kernel, T* data, int d1, int d2, int d3) {
+	PRINT("Gmem Multi %s\n", fn.getName().c_str());
+	
+	int n_threads = 1024;
+	int n_blocks = get_num_block(kernel, n_threads, 0);
+	PRINT("\t# blocks = %d\n", n_blocks);
+	
+	T* tmp;
+	size_t tmp_size = sizeof(T) * d1 * n_blocks;
+	CudaSafeCall( cudaMallocManaged(&tmp, tmp_size) );
+	prefetch(tmp, tmp_size);
+
+	void *kernelArgs[] = {
+		(void *)&fn, (void *)&data, (void *)&tmp, (void *)&d1, (void *)&d2, (void *)&d3
+	};
+	CudaSafeCall( cudaLaunchCooperativeKernel((void *)kernel,
+										  n_blocks, n_threads, kernelArgs) );
+	CudaSafeCall( cudaFree(tmp) );
+}
+
+template<typename F, typename T>
 __global__ void gmem_row_gather_op(F fn, T* data, T* tmp, int d1, int d2, int d3) {
     namespace cg = cooperative_groups;
     cg::grid_group g = cg::this_grid();
@@ -448,6 +505,9 @@ void row_gather_op(F fn, T* data, int d1, int d2, int d3) {
     else if (sizeof(T) * (size_t)d1 <= smem_lim) {
 		smem_row_launch(fn, smem_row_gather_op<F, T>, data, d1, d2, d3);
     }
+	else if (d1 * 64 / ((double)d1 * d2 * d3) < 0.1) {
+		gmem_multi_row_launch(fn, gmem_multi_row_gather_op<F, T>, data, d1, d2, d3);
+	}
 	else {
         gmem_row_launch(fn, gmem_row_gather_op<F, T>, data, d1, d2, d3);
     }
@@ -462,6 +522,9 @@ void row_scatter_op(F fn, T* data, int d1, int d2, int d3) {
     else if (sizeof(T) * (size_t)d1 <= smem_lim) {
 		smem_row_launch(fn, smem_row_scatter_op<F, T>, data, d1, d2, d3);
     }
+	else if (d1 * 64 / ((double)d1 * d2 * d3) < 0.1) {
+		gmem_multi_row_launch(fn, gmem_multi_row_scatter_op<F, T>, data, d1, d2, d3);
+	}
 	else {
         gmem_row_launch(fn, gmem_row_scatter_op<F, T>, data, d1, d2, d3);
     }

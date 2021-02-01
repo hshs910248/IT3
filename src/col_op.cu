@@ -103,7 +103,7 @@ void smem_launch(F fn, T* data, int d1, int d2, int d3) {
 	PRINT("Smem %s\n", fn.getName().c_str());
 	size_t smem_lim = shared_mem_per_block();
 	int x_lim = smem_lim / (sizeof(T) * d2);
-	int n_threads_x = min(1024, (int)pow(2, (int)log2(x_lim)));
+	int n_threads_x = min(1024, (int)pow(2, (int)log2((double)x_lim)));
 	int n_threads_y = min(d2, 1024 / n_threads_x);
 	dim3 block_dim(n_threads_x, n_threads_y);
 	int n_threads = n_threads_x * n_threads_y;
@@ -230,7 +230,7 @@ void smem_launch(F fn, T* data, int d1, int d2, int d3) {
 	PRINT("Smem %s\n", fn.getName().c_str());
 	size_t smem_lim = shared_mem_per_block();
 	int x_lim = smem_lim / (sizeof(T) * d2);
-	int n_threads_x = min(1024, (int)pow(2, (int)log2(x_lim)));
+	int n_threads_x = min(1024, (int)pow(2, (int)log2((double)x_lim)));
 	int n_threads_y = min(d2, 1024 / n_threads_x);
 	dim3 block_dim(n_threads_x, n_threads_y);
 	int n_threads = n_threads_x * n_threads_y;
@@ -335,7 +335,7 @@ void smem_launch(F fn, T* data, int d1, int d2) {
 	PRINT("Smem %s\n", fn.getName().c_str());
 	size_t smem_lim = shared_mem_per_block();
 	int x_lim = smem_lim / (sizeof(T) * d2);
-	int n_threads_x = min(1024, (int)pow(2, (int)log2(x_lim)));
+	int n_threads_x = min(1024, (int)pow(2, (int)log2((double)x_lim)));
 	int n_threads_y = min(d2, 1024 / n_threads_x);
 	dim3 block_dim(n_threads_x, n_threads_y);
 	int n_threads = n_threads_x * n_threads_y;
