@@ -17,7 +17,11 @@ template<typename T>
 void prefetch(T* data, size_t mem_size) {
 	int dev;
 	CudaSafeCall( cudaGetDevice(&dev) );
-	CudaSafeCall( cudaMemPrefetchAsync(data, mem_size, dev, 0) );
+	cudaPointerAttributes attributes;
+	CudaSafeCall( cudaPointerGetAttributes(&attributes, data) );
+	if (attributes.type == cudaMemoryTypeManaged) {
+		CudaSafeCall( cudaMemPrefetchAsync(data, mem_size, dev, 0) );
+	}
 }
 
 
