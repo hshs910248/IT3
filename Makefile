@@ -19,7 +19,7 @@ CC = g++
 NVCC = nvcc
 CUDAROOT = $(subst /bin/,,$(dir $(shell which $(NVCC))))
 CPPFLAGS = -I$(INC_DIR) -I$(SRC_DIR) -I$(CUDAROOT)/include -L$(CUDAROOT)/lib64 -std=c++14 -O3 -DDEBUG
-NVCCFLAGS = -gencode=arch=compute_61,code=sm_61 -rdc=true
+NVCCFLAGS = -gencode=arch=compute_61,code=sm_61 -gencode=arch=compute_70,code=sm_70 -rdc=true
 
 all: lib/libinplacett.a test_inplace
 
